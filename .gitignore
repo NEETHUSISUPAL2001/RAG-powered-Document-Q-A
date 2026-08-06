@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables (contains secrets)
+.env
+
+# ChromaDB state files (exposes DB contents)
+chroma_db/chroma.sqlite3
+chroma_db/db*/data_level0.bin
+chroma_db/db*/header.bin
+chroma_db/db*/length.bin
+chroma_db/db*/link_lists.bin
+
+# Saved PDFs (uploaded documents — sensitive content)
+backend/saved_documents/*.pdf
+backend/temp_uploads/*.pdf
+
+# Node frontend build artifacts
+frontend/dist/
