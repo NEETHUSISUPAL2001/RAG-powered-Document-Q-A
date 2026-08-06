@@ -1,13 +1,20 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { UploadCloud, FileText, Send, User, Bot, LogOut, Loader2, Info, Folder, MessageSquare, AlertCircle } from 'lucide-react';
+import { UploadCloud, FileText, Send, User, Bot, LogOut, Loader2, Info, Folder, MessageSquare } from 'lucide-react';
 
 interface Message {
   id: string;
   type: 'user' | 'bot';
   content: string;
   sources?: Array<{ source: string; page: number; snippet: string }>;
+}
+
+interface ChatHistoryItem {
+  _id: string;
+  question: string;
+  answer: string;
+  sources: Array<{ source: string; page: number; snippet: string }>;
 }
 
 interface Document {
@@ -40,7 +47,7 @@ export default function Dashboard() {
         // Fetch documents
         const docsRes = await api.get('/documents');
         setDocuments(docsRes.data);
-      } catch (err) {
+      } catch {
         // If token is invalid or expired, go to login
         localStorage.removeItem('token');
         navigate('/login');
@@ -65,7 +72,7 @@ export default function Dashboard() {
     try {
       const { data } = await api.get(`/chat_history/${doc_id}`);
       const historyMessages: Message[] = [];
-      data.forEach((chat: any) => {
+      data.forEach((chat: ChatHistoryItem) => {
         historyMessages.push({ id: chat._id + '_q', type: 'user', content: chat.question });
         historyMessages.push({ id: chat._id + '_a', type: 'bot', content: chat.answer, sources: chat.sources });
       });
@@ -74,7 +81,6 @@ export default function Dashboard() {
       console.error("Failed to load chat history", err);
     }
   };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -109,7 +115,7 @@ export default function Dashboard() {
         type: 'bot',
         content: `I've successfully read "${file.name}" (${data.chunks} chunks processed). What would you like to know about it?`
       }]);
-    } catch (err) {
+    } catch {
       alert('Failed to upload document.');
     } finally {
       setIsUploading(false);
@@ -152,7 +158,7 @@ export default function Dashboard() {
         content: data.answer,
         sources: data.sources 
       }]);
-    } catch (err) {
+    } catch {
       setMessages(prev => [...prev, { 
         id: Date.now().toString(), 
         type: 'bot', 

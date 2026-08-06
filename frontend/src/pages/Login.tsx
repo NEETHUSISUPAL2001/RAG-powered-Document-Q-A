@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import api from '../api';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 
-import loginGif from '../assets/user-profile.gif';
+import loginGif from '../assets/Login@2x.gif';
 
 // ── Generates an SVG path with circular cloud scallops on the right edge ──
 // width = how far right the panel goes
@@ -49,21 +50,16 @@ export default function Login() {
         localStorage.setItem('token', data.access_token);
         navigate('/');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Something went wrong. Try again.');
+    } catch (err) {
+      setError(
+        axios.isAxiosError(err)
+          ? err.response?.data?.detail
+          : 'Something went wrong. Try again.'
+      );
     } finally {
       setLoading(false);
     }
   };
-
-  // ── 4 cloud layers: dark → light blue, each slightly narrower + offset ──
-  // The "breathing" animation shifts each layer's width independently
-  const layers = [
-    { color: '#1565C0', w: 370, scallops: 8, delay: '0s',    dur: '4s'  }, // deepest blue, widest
-    { color: '#1E88E5', w: 340, scallops: 8, delay: '0.4s',  dur: '4.4s' },
-    { color: '#64B5F6', w: 310, scallops: 8, delay: '0.8s',  dur: '4.8s' },
-    { color: '#BBDEFB', w: 280, scallops: 8, delay: '1.2s',  dur: '5.2s' }, // lightest, closest to white
-  ];
 
   return (
     <>
@@ -98,6 +94,20 @@ export default function Login() {
         .cloud-layer-4 { animation: cloud-breathe-4 5.2s ease-in-out 1.2s infinite; }
 
         .gif-blend { mix-blend-mode: multiply; }
+
+        /* Gentle floating motion for the animated GIF */
+        @keyframes float {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-9px); }
+        }
+        .float-anim { animation: float 5s ease-in-out infinite; }
+
+        /* Soft fade + slide up when the form loads */
+        @keyframes fade-up {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .fade-up { animation: fade-up 0.7s ease-out both; }
       `}</style>
 
       <div className="min-h-screen w-full flex overflow-hidden bg-white">
@@ -145,17 +155,17 @@ export default function Login() {
 
           {/* ── Left panel content (above the SVG layers) ── */}
           <div className="relative z-10 h-full flex flex-col items-center justify-between py-10 px-10">
-            <p className="self-start text-white text-sm font-light tracking-wide">Welcome to</p>
+            <p className="self-start text-white text-sm font-light tracking-wide bg-white/10 border border-white/20 rounded-full px-4 py-1.5 backdrop-blur-sm">Welcome to</p>
 
             {/* GIF / Illustration */}
-            <div className="flex flex-col items-center">
-              <div className="w-48 h-48 rounded-full bg-white bg-opacity-20 border-2 border-white border-opacity-40
-                              flex items-center justify-center overflow-hidden shadow-2xl mb-6">
-                {/* mix-blend-mode: multiply removes the white background of the GIF */}
-                <img src={loginGif} alt="DocuMind AI" className="w-full h-full object-contain gif-blend" />
+            <div className="relative flex flex-col items-center">
+              {/* Floating animated GIF shown as-is */}
+              <div className="float-anim mb-7">
+                <img src={loginGif} alt="DocuMind AI" className="w-96 h-96 object-contain gif-blend drop-shadow-2xl" />
               </div>
-              <h2 className="text-white text-2xl font-bold">DocuMind AI</h2>
-              <p className="text-blue-200 text-xs text-center mt-2 leading-relaxed max-w-[180px]">
+
+              <h2 className="text-white text-2xl font-bold tracking-tight">DocuMind AI</h2>
+              <p className="text-blue-200 text-xs text-center mt-2 leading-relaxed max-w-[200px]">
                 Your AI assistant for<br />seamless document Q&A.
               </p>
             </div>
@@ -172,7 +182,7 @@ export default function Login() {
             RIGHT PANEL — Auth Form
         ════════════════════════════════════════ */}
         <div className="flex-1 flex items-center justify-center px-12 bg-white">
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-md fade-up">
 
             <h1 className="text-2xl font-bold text-gray-800 mb-7">
               {isRegistering ? 'Create your account' : 'Welcome back 👋'}
@@ -253,7 +263,7 @@ export default function Login() {
                   type="submit"
                   disabled={loading}
                   onClick={() => setIsRegistering(true)}
-                  className="px-8 py-2.5 bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold
+                  className="px-8 py-2.5 bg-blue-700 hover:bg-blue-800 active:scale-95 text-white text-sm font-semibold
                              rounded-full shadow-md shadow-blue-200 transition-all disabled:opacity-60 flex items-center gap-2"
                 >
                   {loading && isRegistering && <Loader2 className="animate-spin h-4 w-4" />}
@@ -263,7 +273,7 @@ export default function Login() {
                   type="submit"
                   disabled={loading}
                   onClick={() => setIsRegistering(false)}
-                  className="px-8 py-2.5 border-2 border-blue-700 text-blue-700 hover:bg-blue-50 text-sm
+                  className="px-8 py-2.5 border-2 border-blue-700 text-blue-700 hover:bg-blue-50 active:scale-95 text-sm
                              font-semibold rounded-full transition-all disabled:opacity-60 flex items-center gap-2"
                 >
                   {loading && !isRegistering && <Loader2 className="animate-spin h-4 w-4" />}
