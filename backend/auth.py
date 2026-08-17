@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 import bcrypt
 from jose import JWTError, jwt
@@ -15,9 +15,9 @@ load_dotenv()
 # ---------------------------------------------------------
 # SECRET_KEY is used to sign the JWT. Only the server knows this.
 # If a hacker tries to modify the JWT, the signature will be invalid.
-SECRET_KEY = os.getenv("JWT_SECRET", "super-secret-key-please-change-in-production")
-ALGORITHM = "HS256" # The encryption algorithm used to sign the token
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # Token expires in 7 days
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.getenv("JWT_SECRET", "super-secret-key-please-change-in-production"))
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256") # The encryption algorithm used to sign the token
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_HOURS", 168)) * 60 # Token expires in 7 days by default
 
 # bcrypt is used directly (passlib is incompatible with bcrypt>=4.x on Python 3.14)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -43,9 +43,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
         
     to_encode.update({"exp": expire}) # Add expiration time to payload
     

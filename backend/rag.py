@@ -1,5 +1,6 @@
 import os
-import shutil
+import uuid
+import asyncio
 from fastapi import UploadFile
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -18,7 +19,10 @@ UPLOAD_DIR = "./saved_documents"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # Directory where ChromaDB persists its vector data on disk
-CHROMA_DB_DIR = "./chroma_db"
+CHROMA_DB_DIR = os.getenv("CHROMA_PATH", "./chroma_db")
+
+# Maximum allowed upload size (15 MB)
+MAX_FILE_SIZE = 15 * 1024 * 1024
 
 # ---------------------------------------------------------
 # Step 1: Initialization (done once at module load - keeps latency low)
@@ -36,7 +40,7 @@ vector_store = Chroma(
 
 # Groq LLM - llama-3.1-8b-instant is currently the fastest available model
 llm = ChatGroq(
-    model_name="llama-3.1-8b-instant",
+    model_name=os.getenv("GROQ_MODEL_NAME", "llama-3.1-8b-instant"),
     api_key=os.getenv("GROQ_API_KEY"),
     temperature=0  # deterministic, fact-based answers for RAG
 )
@@ -50,15 +54,27 @@ async def process_pdf(file: UploadFile, user_id: str, doc_id: str):
     embeds each chunk, and stores vectors in ChromaDB tagged
     with user_id and doc_id for later filtered retrieval.
     """
-    # 1. Save the file temporarily
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    original_name = os.path.basename(file.filename or "document.pdf")
+    if not original_name.lower().endswith(".pdf"):
+        raise ValueError("Only PDF files are allowed")
+
+    # 1. Save the file under a random name to avoid path traversal and
+    #    collisions between users uploading files with the same name.
+    file_path = os.path.join(UPLOAD_DIR, f"{uuid.uuid4().hex}.pdf")
+    size = 0
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        while chunk := await file.read(1024 * 1024):
+            size += len(chunk)
+            if size > MAX_FILE_SIZE:
+                buffer.close()
+                os.remove(file_path)
+                raise ValueError("File too large (max 15 MB)")
+            buffer.write(chunk)
 
     try:
         # 2. Load the PDF - extracts raw text per page
         loader = PyPDFLoader(file_path)
-        docs = loader.load()
+        docs = await asyncio.to_thread(loader.load)
 
         # 3. Split into smaller chunks for precise retrieval
         # Smaller chunks (800 chars) = more targeted matches for Q&A
@@ -66,20 +82,20 @@ async def process_pdf(file: UploadFile, user_id: str, doc_id: str):
             chunk_size=800,
             chunk_overlap=150  # overlap prevents cutting sentences mid-thought
         )
-        splits = text_splitter.split_documents(docs)
+        splits = await asyncio.to_thread(text_splitter.split_documents, docs)
 
         # 4. Tag every chunk with user_id and doc_id
         # This is what allows per-user/per-document filtering later
         for chunk in splits:
             chunk.metadata["user_id"] = user_id
             chunk.metadata["doc_id"] = doc_id
-            chunk.metadata["source"] = file.filename
+            chunk.metadata["source"] = original_name
 
         # 5. Embed and store in ChromaDB (auto-persisted)
-        vector_store.add_documents(splits)
+        await asyncio.to_thread(vector_store.add_documents, splits)
 
         return {
-            "message": f"Successfully processed {len(splits)} chunks from {file.filename}",
+            "message": f"Successfully processed {len(splits)} chunks from {original_name}",
             "chunks": len(splits)
         }
     except Exception as e:
@@ -124,10 +140,10 @@ def format_docs(docs):
 def contextualize_question(question: str, history: str) -> str:
     """
     Rewrites a follow-up question into a standalone question using chat history.
-    This ensures that vector similarity search finds the correct documents even if 
-    the user just asks 'what about the projects?' or 'only 2?'.
+    Only calls the LLM if there is a real back-and-forth exchange in the history.
     """
-    if not history.strip():
+    # Only rewrite if history contains at least one full exchange (User + Assistant)
+    if not history.strip() or "User:" not in history or "Assistant:" not in history:
         return question
     
     rewrite_prompt = ChatPromptTemplate.from_template(
@@ -168,7 +184,7 @@ def answer_question(question: str, user_id: str, doc_id: str | None = None, hist
 
     if not relevant_docs:
         return {
-            "answer": "I couldn't find relevant information in your document(s) to answer that.",
+            "answer": "I couldn't find an answer in your document(s). If you are a new user, please make sure to upload a PDF (max 15MB) using the sidebar first so I can read it!",
             "sources": []
         }
 

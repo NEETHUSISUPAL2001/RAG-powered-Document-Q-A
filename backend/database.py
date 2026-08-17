@@ -7,7 +7,7 @@ load_dotenv()
 # We will read the MongoDB connection string from environment variables.
 # Default to a local database if none is provided.
 MONGO_URL = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-DB_NAME = "rag_db"
+DB_NAME = os.getenv("DB_NAME", "rag_db")
 
 client = None
 db = None

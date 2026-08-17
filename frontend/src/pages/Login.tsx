@@ -1,25 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import api from '../api';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
-
-import loginGif from '../assets/Login@2x.gif';
-
-// ── Generates an SVG path with circular cloud scallops on the right edge ──
-// width = how far right the panel goes
-// scallops = number of cloud puffs
-function cloudPath(width: number, scallops: number): string {
-  const totalH = 1000; // viewBox height
-  const r = totalH / scallops / 2; // radius of each scallop circle
-  let d = `M 0 0 L ${width} 0 `;
-  for (let i = 0; i < scallops; i++) {
-    // sweep-flag=1 makes the arc bulge to the RIGHT (outward)
-    d += `A ${r} ${r} 0 0 1 ${width} ${(i + 1) * r * 2} `;
-  }
-  d += `L 0 1000 Z`;
-  return d;
-}
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Sparkles, BrainCircuit } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,6 +11,11 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -64,224 +52,235 @@ export default function Login() {
   return (
     <>
       <style>{`
-        html, body, #root { height: 100%; margin: 0; padding: 0; }
-
-        /*
-         * Each layer independently oscillates its path's width
-         * by animating the SVG 'd' attribute between two shapes.
-         * This creates the fluid, breathing cloud effect.
-         */
-        @keyframes cloud-breathe-1 {
-          0%, 100% { d: path("${cloudPath(370, 8)}"); }
-          50%       { d: path("${cloudPath(395, 8)}"); }
-        }
-        @keyframes cloud-breathe-2 {
-          0%, 100% { d: path("${cloudPath(340, 8)}"); }
-          50%       { d: path("${cloudPath(365, 8)}"); }
-        }
-        @keyframes cloud-breathe-3 {
-          0%, 100% { d: path("${cloudPath(310, 8)}"); }
-          50%       { d: path("${cloudPath(335, 8)}"); }
-        }
-        @keyframes cloud-breathe-4 {
-          0%, 100% { d: path("${cloudPath(280, 8)}"); }
-          50%       { d: path("${cloudPath(305, 8)}"); }
+        /* Animated Mesh Gradient Background */
+        .mesh-bg {
+          background-color: #0f172a;
+          background-image: 
+            radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+            radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+            radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+          animation: mesh-pulse 15s ease-in-out infinite alternate;
         }
 
-        .cloud-layer-1 { animation: cloud-breathe-1 4s ease-in-out infinite; }
-        .cloud-layer-2 { animation: cloud-breathe-2 4.4s ease-in-out 0.4s infinite; }
-        .cloud-layer-3 { animation: cloud-breathe-3 4.8s ease-in-out 0.8s infinite; }
-        .cloud-layer-4 { animation: cloud-breathe-4 5.2s ease-in-out 1.2s infinite; }
+        @keyframes mesh-pulse {
+          0% { background-position: 0% 0%; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0% 0%; }
+        }
 
-        .gif-blend { mix-blend-mode: multiply; }
+        /* Glassmorphism */
+        .premium-glass {
+          background: rgba(15, 23, 42, 0.6);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
 
-        /* Gentle floating motion for the animated GIF */
+        /* Input styling */
+        .cyber-input {
+          background: rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: white;
+          transition: all 0.3s ease;
+        }
+        
+        .cyber-input:focus {
+          background: rgba(0, 0, 0, 0.4);
+          border-color: #818cf8;
+          box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+        }
+
+        .cyber-input::placeholder {
+          color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Button Glow */
+        .glow-btn {
+          position: relative;
+          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+          z-index: 1;
+          overflow: hidden;
+        }
+        
+        .glow-btn::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%);
+          opacity: 0;
+          z-index: -1;
+          transition: opacity 0.3s ease;
+        }
+        
+        .glow-btn:hover::before {
+          opacity: 1;
+        }
+
+        /* Animations */
+        @keyframes slideUpFade {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-enter {
+          animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Floating orbs */
+        .orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(60px);
+          opacity: 0.4;
+          animation: float 10s infinite ease-in-out alternate;
+        }
+        
         @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50%      { transform: translateY(-9px); }
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(30px, -30px); }
         }
-        .float-anim { animation: float 5s ease-in-out infinite; }
-
-        /* Soft fade + slide up when the form loads */
-        @keyframes fade-up {
-          from { opacity: 0; transform: translateY(16px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .fade-up { animation: fade-up 0.7s ease-out both; }
       `}</style>
 
-      <div className="min-h-screen w-full flex overflow-hidden bg-white">
+      <div className="min-h-screen w-full flex items-center justify-center p-4 mesh-bg relative overflow-hidden">
+        
+        {/* Background Orbs */}
+        <div className="orb bg-indigo-600 w-96 h-96 top-[-10%] left-[-10%]"></div>
+        <div className="orb bg-purple-600 w-96 h-96 bottom-[-10%] right-[-10%]" style={{ animationDelay: '-5s' }}></div>
 
-        {/* ════════════════════════════════════════
-            LEFT PANEL — solid blue + cloud SVG overlay
-        ════════════════════════════════════════ */}
-        <div className="relative shrink-0" style={{ width: '42%' }}>
-
-          {/* Solid background fill behind all layers */}
-          <div className="absolute inset-0 bg-[#1565C0]" />
-
-          {/* ── 4 Cloud Scallop Layers as animated SVG paths ── */}
-          <svg
-            className="absolute inset-0 w-full h-full"
-            viewBox="0 0 500 1000"
-            preserveAspectRatio="none"
-            style={{ overflow: 'visible' }}
-          >
-            {/* Layer 4 — lightest, renders first (bottom of stack) */}
-            <path
-              className="cloud-layer-4"
-              d={cloudPath(280, 8)}
-              fill="#BBDEFB"
-            />
-            {/* Layer 3 */}
-            <path
-              className="cloud-layer-3"
-              d={cloudPath(310, 8)}
-              fill="#64B5F6"
-            />
-            {/* Layer 2 */}
-            <path
-              className="cloud-layer-2"
-              d={cloudPath(340, 8)}
-              fill="#1E88E5"
-            />
-            {/* Layer 1 — deepest blue, widest, renders on top */}
-            <path
-              className="cloud-layer-1"
-              d={cloudPath(370, 8)}
-              fill="#1565C0"
-            />
-          </svg>
-
-          {/* ── Left panel content (above the SVG layers) ── */}
-          <div className="relative z-10 h-full flex flex-col items-center justify-between py-10 px-10">
-            <p className="self-start text-white text-sm font-light tracking-wide bg-white/10 border border-white/20 rounded-full px-4 py-1.5 backdrop-blur-sm">Welcome to</p>
-
-            {/* GIF / Illustration */}
-            <div className="relative flex flex-col items-center">
-              {/* Floating animated GIF shown as-is */}
-              <div className="float-anim mb-7">
-                <img src={loginGif} alt="DocuMind AI" className="w-96 h-96 object-contain gif-blend drop-shadow-2xl" />
-              </div>
-
-              <h2 className="text-white text-2xl font-bold tracking-tight">DocuMind AI</h2>
-              <p className="text-blue-200 text-xs text-center mt-2 leading-relaxed max-w-[200px]">
-                Your AI assistant for<br />seamless document Q&A.
-              </p>
+        {/* Main Card */}
+        <div 
+          className={`premium-glass w-full max-w-md rounded-3xl p-8 relative z-10 transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        >
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 mb-6">
+              <BrainCircuit className="w-8 h-8 text-indigo-400" />
             </div>
-
-            <div className="flex items-center gap-3 text-blue-200 text-[10px] font-bold tracking-widest uppercase">
-              <span>NEETHU</span>
-              <span className="w-px h-3 bg-blue-300 opacity-60" />
-              <span>RAG PROJECT</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ════════════════════════════════════════
-            RIGHT PANEL — Auth Form
-        ════════════════════════════════════════ */}
-        <div className="flex-1 flex items-center justify-center px-12 bg-white">
-          <div className="w-full max-w-md fade-up">
-
-            <h1 className="text-2xl font-bold text-gray-800 mb-7">
-              {isRegistering ? 'Create your account' : 'Welcome back 👋'}
+            <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
+              DocuMind <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400">AI</span>
             </h1>
+            <p className="text-gray-400 text-sm">
+              {isRegistering ? 'Unlock the power of intelligent document analysis.' : 'Welcome back to your AI workspace.'}
+            </p>
+          </div>
 
-            {error && (
-              <div className="mb-5 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
-                {error}
-              </div>
-            )}
+          {error && (
+            <div className="mb-6 bg-red-500/10 border border-red-500/50 rounded-xl px-4 py-3 animate-enter">
+              <p className="text-red-400 text-sm font-medium text-center">{error}</p>
+            </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {isRegistering && (
-                <div>
-                  <label className="block text-xs font-semibold text-gray-600 mb-1.5">Name</label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            
+            {isRegistering && (
+              <div className="animate-enter" style={{ animationDelay: '0.1s' }}>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-500" />
+                  </div>
                   <input
                     name="name"
                     type="text"
                     required
-                    placeholder="Enter your name"
+                    placeholder="Full Name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full border-b-2 border-gray-200 focus:border-blue-600 bg-transparent text-sm
-                               text-gray-700 py-2 outline-none placeholder-gray-400 transition-colors"
+                    className="cyber-input w-full rounded-xl pl-11 pr-4 py-3.5 text-sm outline-none"
                   />
                 </div>
-              )}
+              </div>
+            )}
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">E-mail Address</label>
+            <div className="animate-enter" style={{ animationDelay: '0.2s' }}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-500" />
+                </div>
                 <input
                   name="email"
                   type="email"
                   required
-                  placeholder="Enter your mail"
+                  placeholder="Email Address"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full border-b-2 border-gray-200 focus:border-blue-600 bg-transparent text-sm
-                             text-gray-700 py-2 outline-none placeholder-gray-400 transition-colors"
+                  className="cyber-input w-full rounded-xl pl-11 pr-4 py-3.5 text-sm outline-none"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Password</label>
-                <div className="relative">
-                  <input
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className="w-full border-b-2 border-gray-200 focus:border-blue-600 bg-transparent text-sm
-                               text-gray-700 py-2 outline-none placeholder-gray-400 transition-colors pr-8"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-0 top-2 text-gray-400 hover:text-blue-600 transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
+            <div className="animate-enter" style={{ animationDelay: '0.3s' }}>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-500" />
                 </div>
-              </div>
-
-              {isRegistering && (
-                <div className="flex items-start gap-3 pt-1">
-                  <input type="checkbox" id="terms" required className="mt-0.5 w-4 h-4 accent-blue-600 cursor-pointer" />
-                  <label htmlFor="terms" className="text-xs text-gray-500 leading-relaxed cursor-pointer">
-                    By Signing Up, I Agree with{' '}
-                    <span className="font-bold text-blue-600 hover:underline cursor-pointer">Terms &amp; Conditions</span>
-                  </label>
-                </div>
-              )}
-
-              <div className="flex items-center gap-4 pt-2">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="cyber-input w-full rounded-xl pl-11 pr-12 py-3.5 text-sm outline-none"
+                />
                 <button
-                  type="submit"
-                  disabled={loading}
-                  onClick={() => setIsRegistering(true)}
-                  className="px-8 py-2.5 bg-blue-700 hover:bg-blue-800 active:scale-95 text-white text-sm font-semibold
-                             rounded-full shadow-md shadow-blue-200 transition-all disabled:opacity-60 flex items-center gap-2"
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-white transition-colors"
                 >
-                  {loading && isRegistering && <Loader2 className="animate-spin h-4 w-4" />}
-                  Sign Up
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  onClick={() => setIsRegistering(false)}
-                  className="px-8 py-2.5 border-2 border-blue-700 text-blue-700 hover:bg-blue-50 active:scale-95 text-sm
-                             font-semibold rounded-full transition-all disabled:opacity-60 flex items-center gap-2"
-                >
-                  {loading && !isRegistering && <Loader2 className="animate-spin h-4 w-4" />}
-                  Sign In
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-            </form>
+            </div>
+
+            <div className="pt-4 animate-enter" style={{ animationDelay: '0.4s' }}>
+              <button
+                type="submit"
+                disabled={loading}
+                className="glow-btn w-full rounded-xl py-3.5 px-4 text-white font-semibold text-sm shadow-lg transition-transform active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin h-5 w-5" />
+                ) : (
+                  <>
+                    {isRegistering ? 'Create Account' : 'Sign In'}
+                    <Sparkles className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          <div className="mt-6 flex items-center justify-between animate-enter" style={{ animationDelay: '0.5s' }}>
+            <div className="h-px bg-white/10 flex-1"></div>
+            <span className="px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">or continue with</span>
+            <div className="h-px bg-white/10 flex-1"></div>
           </div>
+
+          <button
+            type="button"
+            onClick={() => { window.location.href = `${import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'}/auth/google`; }}
+            className="mt-6 w-full flex items-center justify-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl py-3.5 px-4 text-white text-sm font-medium transition-all animate-enter"
+            style={{ animationDelay: '0.6s' }}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/>
+              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"/>
+              <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"/>
+              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"/>
+            </svg>
+            Google
+          </button>
+
+          <div className="mt-8 text-center animate-enter" style={{ animationDelay: '0.7s' }}>
+            <button
+              onClick={() => setIsRegistering(!isRegistering)}
+              className="text-gray-400 hover:text-white text-sm transition-colors"
+            >
+              {isRegistering ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+            </button>
+          </div>
+
         </div>
       </div>
     </>

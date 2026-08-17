@@ -23,6 +23,13 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserUpdate(BaseModel):
+    """
+    Model for updating a user's profile (name/email).
+    """
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+
 class Token(BaseModel):
     """
     Model for the JWT token response we send back to the frontend
