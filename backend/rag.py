@@ -2,7 +2,7 @@ import os
 import uuid
 import asyncio
 from fastapi import UploadFile
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import Chroma
@@ -72,8 +72,8 @@ async def process_pdf(file: UploadFile, user_id: str, doc_id: str):
             buffer.write(chunk)
 
     try:
-        # 2. Load the PDF - extracts raw text per page
-        loader = PyPDFLoader(file_path)
+        # 2. Load the PDF - extracts raw text per page (using PDFPlumber to preserve table structures)
+        loader = PDFPlumberLoader(file_path)
         docs = await asyncio.to_thread(loader.load)
 
         # 3. Split into smaller chunks for precise retrieval
