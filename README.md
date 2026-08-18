@@ -1,23 +1,23 @@
-# 🧠 DocuMind AI — RAG-Powered Document Q&A
+#  DocuMind AI — RAG-Powered Document Q&A
 
 An intelligent document assistant powered by **Retrieval-Augmented Generation (RAG)**. Upload any PDF and ask questions about its content in natural language — DocuMind AI reads, understands, and answers instantly.
 
 ---
 
-## ✨ Features
+##  Features
 
-- 📄 **PDF Upload & Processing** — Upload PDFs (up to 15MB) and instantly query their content
-- 🤖 **AI-Powered Q&A** — Answers grounded in your document using Groq's LLM (Llama 3)
-- 🔍 **Semantic Search** — ChromaDB vector store finds the most relevant sections
-- 💬 **Chat History** — Conversations are saved per-document and loaded on revisit
-- 🔐 **Authentication** — Email/password signup and Google OAuth login
-- 👤 **User Profiles** — Each user has isolated document storage and chat history
-- 📑 **Source Citations** — Every answer shows which document it came from
-- 🗂️ **Document Library** — Access all your previously uploaded documents from the sidebar
+-  **PDF Upload & Processing** — Upload PDFs (up to 15MB) and instantly query their content
+- **AI-Powered Q&A** — Answers grounded in your document using Groq's LLM (Llama 3)
+-  **Semantic Search** — ChromaDB vector store finds the most relevant sections
+-  **Chat History** — Conversations are saved per-document and loaded on revisit
+- **Authentication** — Email/password signup and Google OAuth login
+-  **User Profiles** — Each user has isolated document storage and chat history
+-  **Source Citations** — Every answer shows which document it came from
+-  **Document Library** — Access all your previously uploaded documents from the sidebar
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -32,7 +32,7 @@ An intelligent document assistant powered by **Retrieval-Augmented Generation (R
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Python 3.10+
@@ -106,7 +106,7 @@ Open your browser at **http://localhost:5173**
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 RAG-powered-Document-Q-A/
@@ -129,7 +129,7 @@ RAG-powered-Document-Q-A/
 
 ---
 
-## 🔒 Security Notes
+##  Security Notes
 
 - The `backend/.env` file containing real API keys is excluded from version control via `.gitignore`
 - Never commit real credentials to GitHub
@@ -137,7 +137,7 @@ RAG-powered-Document-Q-A/
 
 ---
 
-## 🙋‍♀️ Author
+##  Author
 
 **Neethu Sisupal S D**  
 M.Sc Artificial Intelligence | Taphubs Global  
