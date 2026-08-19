@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
-import { User, Mail, Calendar, FileText, Settings, LogOut, Edit2, Loader2, Shield, Globe, Award, Clock, ArrowLeft } from 'lucide-react';
+import { User, Mail, Calendar, FileText, LogOut, Edit2, Loader2, ArrowLeft } from 'lucide-react';
 
 interface UserProfileData { _id: string; name: string; email: string; created_at?: string; }
 
