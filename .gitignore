@@ -40,6 +40,9 @@ Thumbs.db
 
 # Environment variables (contains secrets)
 .env
+.env.local
+.env.production
+.env.*.local
 
 # ChromaDB state files (exposes DB contents)
 chroma_db/chroma.sqlite3

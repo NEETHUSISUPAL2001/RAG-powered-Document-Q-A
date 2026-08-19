@@ -63,7 +63,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Create your environment file
-cp ../.env.example .env
+cp .env.example .env
 # Now edit .env and fill in your real API keys
 ```
 
@@ -76,10 +76,10 @@ npm install
 
 ### 4. Configure Environment Variables
 
-Copy `.env.example` to `backend/.env` and fill in the values:
+The `backend/.env.example` file lists all required variables. Copy it and fill in your values:
 
 ```env
-JWT_SECRET_KEY=your-strong-random-secret
+JWT_SECRET=your-strong-random-secret
 MONGO_URI=mongodb://localhost:27017/documind_ai
 GROQ_API_KEY=your-groq-api-key
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -115,6 +115,7 @@ RAG-powered-Document-Q-A/
 │   ├── rag.py            # RAG pipeline (PDF ingestion + Q&A)
 │   ├── google_auth.py    # Google OAuth flow
 │   ├── requirements.txt
+│   ├── .env.example      # Template — copy to .env and fill in secrets
 │   └── .env              # ← Your real secrets (never committed)
 ├── frontend/
 │   └── src/
@@ -122,7 +123,6 @@ RAG-powered-Document-Q-A/
 │           ├── Login.tsx      # Auth page (email + Google)
 │           ├── Dashboard.tsx  # Main chat interface
 │           └── UserProfile.tsx
-├── .env.example          # Template — fill in and copy to backend/.env
 ├── .gitignore
 └── README.md
 ```

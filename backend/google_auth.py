@@ -10,12 +10,8 @@ from requests_oauthlib import OAuth2Session
 import auth
 from database import get_db
 
-# Allow OAuth2 over HTTP for local development
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
-# Google returns expanded scopes, so we need to relax scope checking
 os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
-
-router = APIRouter(tags=["google-auth"])
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -23,20 +19,20 @@ GOOGLE_REDIRECT_URI = os.getenv(
     "GOOGLE_REDIRECT_URI", "http://127.0.0.1:8000/auth/google/callback"
 )
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+IS_PRODUCTION = os.getenv("ENVIRONMENT", "development") == "production"
 
 AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 SCOPE = ["openid", "email", "profile"]
 
+OAUTH_TIMEOUT = 15
+
+router = APIRouter(tags=["google-auth"])
+
 
 @router.get("/google")
 async def google_login(request: Request):
-    """
-    Step 1 of the OAuth flow.
-    Redirects the user to Google's consent screen, remembering a
-    random 'state' in an HttpOnly cookie to prevent CSRF on the callback.
-    """
     if not GOOGLE_CLIENT_ID:
         raise HTTPException(
             status_code=500,
@@ -56,18 +52,13 @@ async def google_login(request: Request):
         max_age=600,
         httponly=True,
         samesite="lax",
+        secure=IS_PRODUCTION,
     )
     return response
 
 
 @router.get("/google/callback")
 async def google_callback(request: Request, code: str, state: str, db=Depends(get_db)):
-    """
-    Step 2 of the OAuth flow.
-    Verifies the state cookie, exchanges the authorization code for an
-    access token, fetches the user's profile, upserts them in MongoDB,
-    and redirects to the frontend with an app JWT in the query string.
-    """
     expected_state = request.cookies.get("google_oauth_state")
     if not expected_state or not secrets.compare_digest(expected_state, state):
         raise HTTPException(status_code=400, detail="Invalid OAuth state")
@@ -85,15 +76,16 @@ async def google_callback(request: Request, code: str, state: str, db=Depends(ge
         session.fetch_token(
             token_url=TOKEN_URL,
             client_secret=GOOGLE_CLIENT_SECRET,
-            authorization_response=request.url.__str__(),
+            code=code,
+            timeout=OAUTH_TIMEOUT,
         )
-        return session.get(USERINFO_URL).json()
+        response = session.get(USERINFO_URL, timeout=OAUTH_TIMEOUT)
+        response.raise_for_status()
+        return response.json()
 
     try:
         info = await asyncio.to_thread(_exchange_and_fetch_profile)
     except Exception as e:
-        import traceback
-        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Failed to authenticate with Google: {str(e)}")
 
     email = info.get("email")
@@ -112,7 +104,6 @@ async def google_callback(request: Request, code: str, state: str, db=Depends(ge
             }
         )
     else:
-        # Link the google account and fill in the name for Google-only users
         set_fields = {}
         if not user.get("google_id") and info.get("id"):
             set_fields["google_id"] = info.get("id")
@@ -126,6 +117,7 @@ async def google_callback(request: Request, code: str, state: str, db=Depends(ge
         expires_delta=timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
-    response = RedirectResponse(f"{FRONTEND_URL}/auth/google?token={access_token}")
+    redirect_url = f"{FRONTEND_URL}/auth/google?token={access_token}"
+    response = RedirectResponse(redirect_url)
     response.delete_cookie("google_oauth_state")
     return response

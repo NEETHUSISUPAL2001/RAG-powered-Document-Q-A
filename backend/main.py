@@ -1,6 +1,10 @@
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import uuid
 import asyncio
 from typing import Optional
@@ -27,10 +31,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="RAG Q&A Backend", lifespan=lifespan)
 
 # Setup CORS to allow our React frontend to communicate with this FastAPI backend
-ALLOWED_ORIGINS = os.getenv(
+_cors_raw = os.getenv(
     "CORS_ORIGINS",
     "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177",
-).split(",")
+)
+_frontend_url = os.getenv("FRONTEND_URL", "").strip()
+ALLOWED_ORIGINS = list({o.strip() for o in _cors_raw.split(",") if o.strip()})
+if _frontend_url and _frontend_url not in ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS.append(_frontend_url)
 
 app.add_middleware(
     CORSMiddleware,

@@ -16,8 +16,16 @@ load_dotenv()
 # SECRET_KEY is used to sign the JWT. Only the server knows this.
 # If a hacker tries to modify the JWT, the signature will be invalid.
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", os.getenv("JWT_SECRET", "super-secret-key-please-change-in-production"))
-ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256") # The encryption algorithm used to sign the token
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("TOKEN_EXPIRE_HOURS", 168)) * 60 # Token expires in 7 days by default
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+
+_jwt_expire_minutes = os.getenv("JWT_EXPIRE_MINUTES")
+_token_expire_hours = os.getenv("TOKEN_EXPIRE_HOURS")
+if _jwt_expire_minutes:
+    ACCESS_TOKEN_EXPIRE_MINUTES = int(_jwt_expire_minutes)
+elif _token_expire_hours:
+    ACCESS_TOKEN_EXPIRE_MINUTES = int(_token_expire_hours) * 60
+else:
+    ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 # bcrypt is used directly (passlib is incompatible with bcrypt>=4.x on Python 3.14)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
