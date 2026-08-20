@@ -222,11 +222,18 @@ export default function Dashboard() {
         created_at: new Date().toISOString()
       }, ...prev]);
 
-      setMessages([{
-        id: Date.now().toString(),
-        type: 'bot',
-        content: `I've successfully processed ${file.name}. What would you like to know about it?`
-      }]);
+      setMessages([
+        {
+          id: Date.now().toString() + '_u',
+          type: 'user',
+          content: `Uploaded document: ${file.name}`
+        },
+        {
+          id: Date.now().toString() + '_b',
+          type: 'bot',
+          content: `I've successfully processed ${file.name}. What would you like to know about it?`
+        }
+      ]);
     } catch {
       alert('Failed to upload document.');
     } finally {
