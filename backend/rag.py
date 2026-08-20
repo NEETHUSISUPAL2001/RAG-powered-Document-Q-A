@@ -1,10 +1,11 @@
 import os
 import uuid
 import asyncio
+from datetime import datetime
 from fastapi import UploadFile
 from langchain_community.document_loaders import PDFPlumberLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
@@ -25,7 +26,10 @@ _state = {}
 
 def _get_embeddings():
     if "embeddings" not in _state:
-        _state["embeddings"] = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        _state["embeddings"] = FastEmbedEmbeddings(
+            model_name="BAAI/bge-small-en-v1.5",
+            batch_size=8
+        )
     return _state["embeddings"]
 
 
@@ -45,6 +49,8 @@ def _get_llm():
             model_name=os.getenv("GROQ_MODEL_NAME", "llama-3.1-8b-instant"),
             api_key=os.getenv("GROQ_API_KEY"),
             temperature=0,
+            reasoning_effort="low"
+
         )
     return _state["llm"]
 
@@ -95,6 +101,7 @@ async def process_pdf(file: UploadFile, user_id: str, doc_id: str):
 
 RAG_PROMPT = ChatPromptTemplate.from_template(
     "You are a helpful assistant answering questions about a document.\n"
+    "The current date is {current_date}. Use this to calculate time if 'Present' or 'Now' is mentioned in the context.\n"
     "Use ONLY the following context to answer the question. "
     "If the answer is not contained in the context, say "
     "\"I don't have enough information in the document to answer that.\"\n"
@@ -155,7 +162,7 @@ def answer_question(question: str, user_id: str, doc_id: str | None = None, hist
     context = format_docs(relevant_docs)
 
     chain = RAG_PROMPT | _get_llm() | StrOutputParser()
-    answer = chain.invoke({"context": context, "question": question, "history": history})
+    answer = chain.invoke({"context": context, "question": question, "history": history, "current_date": datetime.now().strftime("%B %Y")})
 
     sources = [
         {

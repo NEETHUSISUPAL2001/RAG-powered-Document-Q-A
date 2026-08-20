@@ -225,7 +225,7 @@ export default function Dashboard() {
       setMessages([{
         id: Date.now().toString(),
         type: 'bot',
-        content: `I've successfully processed **${file.name}**. What would you like to know about it?`
+        content: `I've successfully processed ${file.name}. What would you like to know about it?`
       }]);
     } catch {
       alert('Failed to upload document.');
@@ -404,7 +404,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
+              <div className="h-32 sm:h-40" ref={messagesEndRef} />
             </div>
           )}
         </div>
